@@ -6,8 +6,8 @@ from scipy.optimize import fsolve
 import warnings
 from numpy import RankWarning
 import math
-
-
+from plot_setup import create_lane_plot
+from preprocessing import Bev_Gray_Blurred_Binary_transform, histogram_argmax
 
 cap = cv2.VideoCapture("C:\\Users\\Hannibal\\Desktop\\dolbat\\project\\trackrecord4_2x.mp4")
 
@@ -16,46 +16,14 @@ cap = cv2.VideoCapture("C:\\Users\\Hannibal\\Desktop\\dolbat\\project\\trackreco
 #########################################################################################
 # 플롯 세팅
 ###############################################################q##########################
-fig, ax = plt.subplots(figsize=(11, 6), constrained_layout=False)
-
-
-ax.grid(True)
-ax.set_xlim(0, 2.0+1.341)  # X축 범위 (0m ~ 2m) +1.341m
-ax.set_ylim(-1.2, 1.2)  # Y축 범위 (-0.7m ~ 0.7m)
-ax.set_title("Lane Points and Polynomial Fitting in Meter Coordinates")
-ax.set_xlabel("X Position (m)")
-ax.set_ylabel("Y Position (m)")
-
-rear_axle_center_size = 0.07 # 차량의 후륜축 중심 위치로 설정할 네모 
-rear_axle_center = plt.Rectangle((0, -1/2*rear_axle_center_size), rear_axle_center_size, rear_axle_center_size, linewidth=1, edgecolor='purple', facecolor='purple')
-ax.add_patch(rear_axle_center)
-ax.plot([], [], 's', color="purple", label= "rear_axle_center")
-
-
-
-
-
-L_scatter, = ax.plot([], [], 'bo', label="Left Lane Points") # 플롯에 데이터 포인트 그리기
-ax.plot([], [], '-', color="blue", label= "Left Lane Fitting")
-
-R_scatter, = ax.plot([], [], 'ro', label="Right Lane Points")
-ax.plot([], [], '-', color="red", label= "Right Lane Fitting")
-
-
-
-p_scatter, = ax.plot([], [], 'o', color = 'green', label="Path Points")
-ax.plot([], [], '-', color="green", label= "Path Fitting")
-
-nv_p_scatter, = ax.plot([], [], 'o', color = 'black', label="nv Path Points")
-ax.plot([], [], '-', color="black", label= "nv Path Fitting")
-
-Lookahead_point, = ax.plot([], [], 'o', color = 'orange', label="Lookahead Point")
-
-
-
-ax.legend(loc='upper right', bbox_to_anchor=(1.35, 1), borderaxespad=0.) #  범례와 그래프 간의 비율 조정
-plt.subplots_adjust(right=0.9)
-plt.tight_layout()
+plot_objs = create_lane_plot()
+fig = plot_objs['fig']
+ax  = plot_objs['ax']
+L_scatter    = plot_objs['L_scatter']
+R_scatter    = plot_objs['R_scatter']
+p_scatter    = plot_objs['p_scatter']
+nv_p_scatter = plot_objs['nv_p_scatter']
+lookahead_scatter = plot_objs['lookahead_scatter']
 
 
 
@@ -79,38 +47,6 @@ def pixeL_to_meter(x_pixel, y_pixel, origin_x, origin_y, S_x, S_y):
     x_meter = (x_pixel - origin_x) * S_x
     y_meter = (origin_y - y_pixel) * S_y
     return y_meter, -x_meter # return x_meter, y_meter  결과를 x축대칭, y축대칭, y=x축 대칭을 한 상황
-
-
-#########################################################################################
-# 영상 전처리 (BEV -> 흑백 -> 블러 -> 이진화)
-#########################################################################################
-def Bev_Gray_Blurred_Binary_transform(frame):
-    height, width = frame.shape[:2]
-    src_pts = np.float32([[10, 450], [540, 430], [435, 240], [190, 240]])
-    dst_pts = np.float32([[0, height], [width, height], [width, 0], [0, 0]])
-    bev_matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
-    bev_frame = cv2.warpPerspective(frame, bev_matrix, (width, height)) # bev
-    gray_frame = cv2.cvtColor(bev_frame, cv2.COLOR_BGR2GRAY) # 흑백 변환
-    blurred_frame = cv2.GaussianBlur(gray_frame, (19, 19), 0) # 가우시안 블러
-    ret, binary_frame = cv2.threshold(blurred_frame, 225, 255, cv2.THRESH_BINARY) # 이진화 적용
-    return  binary_frame
-
-
-
-#########################################################################################
-# 히스토그램
-########################################################################################
-def histogram_argmax(frame): # 영상 하단 흰 픽셀의 히스토그램을 기반으로 초기 차선 위치 탐색
-    histogram = np.sum(frame[int(1.15 * frame.shape[0] / 3):, :], axis=0)
-    midpoint = int(histogram.shape[0] / 2)
-    L_x_hist_argmax = np.argmax(histogram[:midpoint:])
-    R_x_hist_argmax = np.argmax(histogram[midpoint:]) + midpoint
-    
-    R_x_threshold = int(1.6 * histogram.shape[0] / 3) # 우측 히스토그램 맥스 지점이 지정된 범위 안에 있는지 확인
-    L_x_threshold = int(1* histogram.shape[0] / 3) # 좌측 히스토그램 맥스 지점이 지정된 범위 안에 있는지 확인
-    
-    return histogram, L_x_hist_argmax, R_x_hist_argmax, L_x_threshold, R_x_threshold
-
 
 
 #########################################################################################
@@ -363,16 +299,6 @@ def L_normal_vector_cal(point, L_poly_func): # 왼쪽 차선함수의 접선벡�
 #########################################################################################
 # 윈도우 제작 후 프레임 반복 시작
 #########################################################################################
-# cap = cv2.VideoCapture("")
-
-#########################################################################################
-## 디버깅용
-# total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-# start_frame = int(total_frames * 90/100)
-# cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
-# ## 디버깅용
-#########################################################################################
-
 if not cap.isOpened():
     print("Error: Cannot open video file.")
     exit()
