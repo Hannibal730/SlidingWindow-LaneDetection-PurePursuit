@@ -9,7 +9,7 @@ import math
 from plot_setup import create_lane_plot
 from preprocessing import Bev_Gray_Blurred_Binary_transform, histogram_argmax
 
-cap = cv2.VideoCapture("C:\\Users\\Hannibal\\Desktop\\dolbat\\project\\trackrecord4_2x.mp4")
+cap = cv2.VideoCapture("test_video.mp4")
 
 
 
@@ -432,14 +432,6 @@ while True:
     
         
 
-
-    
-    
-    
-    
-    
-    
-    
     
     canvas = FigureCanvas(fig) # 맷플롯립에서 생성된 fig(플롯 객체)를 캔버스에 연결
     canvas.draw() # 플롯을 캔버스에 랜더링
