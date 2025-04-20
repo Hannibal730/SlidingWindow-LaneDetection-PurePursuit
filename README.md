@@ -92,10 +92,6 @@ python main.py
 
 
 
-| 미터 단위                     | 픽셀 단위                                                          |
-|-------------------------|--------------------------------------------------------------|
-| ![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058) | ![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)   |
-
 ---
 
 ## 모듈 설명
@@ -106,7 +102,7 @@ python main.py
   1. **Bird’s‑Eye View 변환**  
      - 원본 영상에서 도로 평면이 수직으로 보이도록 4개 기준점(src_pts → dst_pts)으로 BEV 매트릭스 생성
      - BEV 매트릭스와 `cv2.warpPerspective`로 BEV 영상을 생성
-     - ![Image](https://github.com/user-attachments/assets/3498decf-8a4f-4a25-a9a6-e8db0854bf7b)  
+     - ![Image](https://github.com/user-attachments/assets/6195e83f-2a52-4f74-a813-da455d5c44bd) 
      - ![Image](https://github.com/user-attachments/assets/c7094304-f7a8-411a-bd52-c98b3879e42c)
   2. **그레이스케일 변환**  
      - 컬러(BGR) 프레임을 `cv2.cvtColor(BEV영상, COLOR_BGR2GRAY)`로 그레이스케일 변환  
@@ -137,13 +133,14 @@ python main.py
   1. **하단부 ROI 지정**  
      - 전체 높이의 아래 약 2/3 지점(1.15·h/3)부터 마지막 행까지 사용  
   2. **히스토그램 계산**  
-     - ROI 내 모든 열별 흰색 픽셀 합산 → 1차원 배열(hist)  
+     - ROI 내 모든 열별 흰색 픽셀 합산하여 히스토그램 생성
+     - ![Image](https://github.com/user-attachments/assets/63d69952-a237-472a-946e-b6d05d713e44) 
   3. **좌/우 차선 시작점 계산**  
      - 하스토그램을 절반으로 나눠 좌/우 부분에서 각각 `np.argmax` 계산하고, 각각 L_x, R_x 로 반환
      - L_x, R_x는 최초 바운딩 박스 시작지점으로 사용  
   4. **유효 범위 threshold 설정**  
      - 히스토그램 길이·1/3, 1.6/3 지점에서 L_x와 R_x의 임계값(L_thr, R_thr) 계산
-     - ![Image](https://github.com/user-attachments/assets/63d69952-a237-472a-946e-b6d05d713e44)
+     
 
 
 
@@ -162,10 +159,16 @@ python main.py
   - 공식:  
     ```python
     x_meter = (x_px - origin_x) * S_x  
-    y_meter = (origin_y - y_px) * S_y  
-    # 최종 리턴은 (forward, lateral)로 y,x축을 서로 반전
+    y_meter = (origin_y - y_px) * S_y 
     return y_meter, -x_meter
     ```  
+
+
+| 픽셀 단위                     | 미터 단위 단위                                                          |
+|-------------------------|--------------------------------------------------------------|
+| ![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)| ![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058) |   
+
+
 
 ---
 
