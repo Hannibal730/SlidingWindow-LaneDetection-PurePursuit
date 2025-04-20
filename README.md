@@ -1,6 +1,6 @@
 # Lane Detection & Pure Pursuit for Steering Angle of Local Path Planning
 
-로컬 주행 영상을 입력받아 **슬라이딩 윈도우** 기반 차선 검출 기법과 **퓨어 퍼슈트(Pure Pursuit)** 알고리즘을 결합하는 프로젝트입니다. 이를 통해 차선 기반 주행 경로를 실시간으로 생성하고, 해당 경로를 따라 차량 조향 각도를 산출합니다.
+로컬 주행 영상을 입력받아 **Sliding window** 기반 차선 검출 기법과 **Pure Pursuit** 알고리즘을 결합하는 프로젝트입니다. 이를 통해 차선 기반 주행 경로를 실시간으로 생성하고, 해당 경로를 따라 차량 조향 각도를 산출합니다.
 
 
 
@@ -302,6 +302,15 @@ python main.py
      ```
   3. **종료 처리**  
      - `cap.release()`, `cv2.destroyAllWindows()` 호출  
+
+---
+
+## 최종 결과
+
+
+![Watch the video](https://github.com/user-attachments/assets/ee4a903d-03c3-4759-ab37-fb965406ac0c)
+(https://youtu.be/wkIwpAuREkg)
+
 
 ---
 
