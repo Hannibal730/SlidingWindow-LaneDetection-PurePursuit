@@ -90,9 +90,6 @@ python main.py
 | `L`                     | 휠베이스 (m)                                                 | `0.55`     |
 
 
-![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058)
-![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)
-
 
 
 | 미터 단위                     | 픽셀 단위                                                          |
@@ -104,20 +101,36 @@ python main.py
 ## 모듈 설명
 
 
-### `image_preprocessing.py`  
+### [image_preprocessing.py](image_preprocessing.py)  
 - **`Bev_Gray_Blurred_Binary_transform(frame)`**  
-  1. **투시 변환 (Bird’s‑Eye View)**  
-     - 원본 영상에서 도로 평면이 수직으로 보이도록 4개 기준점(src_pts → dst_pts)으로 투시 매트릭스를 계산  
-     - `cv2.warpPerspective`로 왜곡 보정된 BEV 영상을 생성  
+  1. **Bird’s‑Eye View 변환**  
+     - 원본 영상에서 도로 평면이 수직으로 보이도록 4개 기준점(src_pts → dst_pts)으로 BEV 매트릭스 생성
+     - BEV 매트릭스와 `cv2.warpPerspective`로 BEV 영상을 생성
+     - ![Image](https://github.com/user-attachments/assets/3498decf-8a4f-4a25-a9a6-e8db0854bf7b)  
+     - ![Image](https://github.com/user-attachments/assets/c7094304-f7a8-411a-bd52-c98b3879e42c)
   2. **그레이스케일 변환**  
-     - 컬러(BGR) 프레임을 `cv2.cvtColor(..., COLOR_BGR2GRAY)`로 회색조 이미지로 변경  
+     - 컬러(BGR) 프레임을 `cv2.cvtColor(BEV영상, COLOR_BGR2GRAY)`로 그레이스케일 변환  
   3. **가우시안 블러**  
-     - `GaussianBlur` 커널 크기 (19×19), σ=0 으로 노이즈 제거 및 디테일 부드럽게 처리  
+     - `GaussianBlur` 커널 크기 (19×19), σ=0 으로 노이즈 제거
+
   4. **이진화 (Thresholding)**  
      - 픽셀 값이 225 이상이면 흰색(255), 그 외 검은색(0)으로 변환  
-     - 결과는 차선 픽셀만 강조된 0/255 바이너리 프레임  
+     - 결과는 검은색 바탕에 흰색 차선만 나타나는 영상
+
+
+     - 가우시안 블러 없이 이진화 마친 버전
+     - ![Image](https://github.com/user-attachments/assets/f7fee490-c1a5-426d-91f8-d7b37c7c4b23)
+     - 가우시안 블러하고 이진화한 버전
+     - ![Image](https://github.com/user-attachments/assets/f519e5f9-422b-467b-bbce-a77733ef850c)
+
+
 
 ---
+
+
+
+
+
 
 ### `lane_histogram.py`  
 - **`histogram_argmax(frame)`**  
@@ -125,13 +138,22 @@ python main.py
      - 전체 높이의 아래 약 2/3 지점(1.15·h/3)부터 마지막 행까지 사용  
   2. **히스토그램 계산**  
      - ROI 내 모든 열별 흰색 픽셀 합산 → 1차원 배열(hist)  
-  3. **좌/우 피크 인덱스**  
-     - 배열을 절반으로 나눠 좌/우 부분에서 각각 `np.argmax` 호출  
-     - 반환값 L_x, R_x는 초기 차선 윈도우 중앙 X 좌표로 사용  
-  4. **유효 범위 임계치 설정**  
-     - 히스토그램 길이·1/3, 1.6/3 지점에서 좌/우 임계값(L_thr, R_thr) 계산  
+  3. **좌/우 차선 시작점 계산**  
+     - 하스토그램을 절반으로 나눠 좌/우 부분에서 각각 `np.argmax` 계산하고, 각각 L_x, R_x 로 반환
+     - L_x, R_x는 최초 바운딩 박스 시작지점으로 사용  
+  4. **유효 범위 threshold 설정**  
+     - 히스토그램 길이·1/3, 1.6/3 지점에서 L_x와 R_x의 임계값(L_thr, R_thr) 계산
+     - ![Image](https://github.com/user-attachments/assets/63d69952-a237-472a-946e-b6d05d713e44)
+
+
+
 
 ---
+
+
+
+
+
 
 ### `pixel_to_world.py`  
 - **`pixel_to_meter(x_px, y_px, origin_x, origin_y, S_x, S_y)`**  
