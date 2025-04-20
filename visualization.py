@@ -1,5 +1,3 @@
-# plot_setup.py
-
 import matplotlib.pyplot as plt
 
 def create_lane_plot():

@@ -8,12 +8,13 @@ from numpy import RankWarning
 # polyfit 경고 무시
 warnings.simplefilter('ignore', RankWarning)
 import math
-from plot_setup import create_lane_plot
-from preprocessing import Bev_Gray_Blurred_Binary_transform, histogram_argmax
-from coordinate_transform import pixel_to_meter
-from normal_vector_cal import L_normal_vector_cal, R_normal_vector_cal
+from visualization import create_lane_plot
+from image_preprocessing import Bev_Gray_Blurred_Binary_transform
+from pixel_to_world import pixel_to_meter
+from lane_normal_vector_cal import L_normal_vector_cal, R_normal_vector_cal
 from pure_pursuit import lookahead_point_cal, lookahead_point_vec_cal, angle_between_vectors, delta_raidians_cal
-from poly_fit import R_Polyft_Plotting, L_Polyft_Plotting, p_Polyft_Plotting, nv_p_Polyft_Plotting
+from polynomial_fit import R_Polyft_Plotting, L_Polyft_Plotting, p_Polyft_Plotting, nv_p_Polyft_Plotting
+from lane_histogram import histogram_argmax
 
 cap = cv2.VideoCapture("test_video_640x480.mp4")
 

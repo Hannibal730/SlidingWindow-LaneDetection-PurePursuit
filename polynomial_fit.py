@@ -3,8 +3,6 @@ import numpy as np
 
 #########################################################################################
 # 피팅 함수 설정
-# Polyfit 경고를 무시하도록 설정
-# warnings.filterwarnings('ignore', category=RankWarning)
 #########################################################################################
 def R_Polyft_Plotting(R_points_meter_list, R_scatter, ax):
     R_x, R_y = zip(*R_points_meter_list)
