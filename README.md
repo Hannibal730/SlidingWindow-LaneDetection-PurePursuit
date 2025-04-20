@@ -35,7 +35,7 @@
 4. **좌표계 변환**: 현실 세계에서의 제어를 위해서 픽셀 좌표계를 미터 좌표계로 변환
 5. **슬라이딩 윈도우**: 개별 윈도우마다 흰 픽셀의 평균 좌표를 차선 포인트로 계산. (평균 좌표가 검정 픽셀 위인 경우는 별도 처리)
 6. **다항식 피팅**: 차선 포인트를 `np.polyfit`로 다항식(1 or 3차) 모델에 피팅하여 좌/우 차선함수 생성
-7. **법선벡터 평행이동**: 오른쪽 차선함수를 법선벡터 방향으로 평행이동하여 경로함수 생성
+7. **법선벡터 평행이동**: 좌/우 차선함수를 법선벡터 방향으로 평행이동하여 경로함수 생성
 8. **룩어헤드 포인트**: 후륜축 중심 원과 경로함수의 교점을 `scipy.optimize.fsolve`로 계산. (교점 없다면 원의 반지름 점차 증가)
 9.  **퓨어 퍼슛**: 벡터 내적 및 삼각함수를 이용해 조향각 계산
 10. **시각화**: 원본 영상, 슬라이딩 윈도우 영상, 차선 및 경로함수 영상, 조향각을 동시에 출력
@@ -62,6 +62,7 @@ pip install opencv-python numpy matplotlib scipy
 
 **3. main코드 실행**
 ```bash
+cd catkin_ws/script
 python main.py
 ```
 
@@ -97,7 +98,7 @@ python main.py
 ## 모듈 설명
 
 
-### [image_preprocessing.py](image_preprocessing.py)  
+### [image_preprocessing.py](script/image_preprocessing.py)  
 - **`Bev_Gray_Blurred_Binary_transform(frame)`**  
   1. **Bird’s‑Eye View 변환**  
      - 원본 영상에서 도로 평면이 수직으로 보이도록 4개 기준점(src_pts → dst_pts)으로 BEV 매트릭스 생성
@@ -134,7 +135,7 @@ python main.py
 
 
 
-### `lane_histogram.py`  
+### [lane_histogram.py](script/lane_histogram.py)
 - **`histogram_argmax(frame)`**  
   1. **하단부 ROI 지정**  
      - 전체 높이의 아래 약 2/3 지점(1.15·h/3)부터 마지막 행까지 사용  
@@ -158,7 +159,7 @@ python main.py
 
 
 
-### `pixel_to_world.py`  
+### [pixel_to_world.py](script/pixel_to_world.py) 
 - **`pixel_to_meter(x_px, y_px, origin_x, origin_y, S_x, S_y)`**  
   - **원점(origin_x, origin_y)**: 영상 내 차량 위치 기준 픽셀 좌표  
   - **스케일링(S_x, S_y)**: 픽셀 단위 거리 → 실측(m) 비율  
@@ -180,7 +181,7 @@ python main.py
 
 ---
 
-### `sliding_window.py`  
+### [sliding_window.py](script/sliding_window.py)
 - **`SlidingWindow` 클래스**  
   - 이진화된 프레임에서 하단 히스토그램을 구해 초기 좌/우 차선 위치 추정  
   - 슬라이딩 윈도우 반복으로 차선 픽셀 수집 → 픽셀→미터 좌표 변환 → 좌/우 차선의 포인트 리스트 (p_pts) 생성
@@ -197,6 +198,7 @@ python main.py
   - p_pts를 polynomial fitting 처리하여 좌/우 차선함수 생성. (홀수 차수 사용)
 - 평행이동
   - 왼쪽 차선은 점선이라서 포인트 개수가 부족하다. 반면에 오른쪽 차선은 실선이라서 포인트 개수가 풍족하다. 따라서 오른쪽 차선을 평행이동하여 경로함수를 생성한다.
+  - 만약 좌회전 구간에서 오른쪽 차선이 미검출된다면, 왼쪽 차선함수를 평행이동하여 경로함수 생성
   
 - 평행이동 시 법선벡터의 필요성
   - 차선함수를 단순 평행이동하여 경로함수를 제작할 경우에 왜곡이 발생한다. 따라서 차선함수의 법선벡터를 계산하고, 차선함수를 법선벡터 방향으로 평행이동하여 경로함수를 제작해야 한다. 
@@ -217,7 +219,7 @@ python main.py
 ---
 
 
-### `polynomial_fit.py`  
+### [polynomial_fit.py](script/polynomial_fit.py)
 - **`R_Polyft_Plotting`, `L_Polyft_Plotting`**  
   - 오른쪽 차선은 포인트 개수가 충분하기 때문에 3차 다항식으로, 왼쪽 차선은 포인트 개수가 부족하기 때문에 1차 다항식으로 `np.polyfit` 진행
   - `np.poly1d` 반환하며, 플롯 위에 피팅 곡선(300개 점)을 실시간 업데이트  
@@ -228,7 +230,7 @@ python main.py
 ---
 
 
-### `lane_normal_vector_cal.py`  
+### [lane_normal_vector_cal.py](script/lane_normal_vector_cal.py)
 - **`R_normal_vector_cal(x, R_poly_func)`** / **`L_normal_vector_cal(x, L_poly_func)`**  
   1. 주어진 X 좌표에서 다항식의 도함수를 `np.polyder`로 구함  
   2. 접선 기울기(m) → 벡터 `[1, m]` 생성  
@@ -239,7 +241,7 @@ python main.py
 
 ---
 
-### `pure_pursuit.py`  
+### [pure_pursuit.py](script/pure_pursuit.py)
 - **`lookahead_point_cal(a, b, r, poly_func, nv_pts)`**  
   1. 차량 중심 (a,b)에서 반지름 r 원 방정식과 `poly_func(x)` 교점 찾기(`fsolve`)  
   2. 초기 r = `Ld(=2.5)`m 시도 → 실패 시 최대 10m까지 1m 단위로 반지름 증가 재시도  
@@ -253,7 +255,7 @@ python main.py
 
 ---
 
-### `visualization.py`  
+### [visualization.py](script/visualization.py)
 - **`create_lane_plot()`**  
   - 파란 점, 실선: 왼쪽 차선 포인트, 1차 다항식으로 피팅된 왼쪽 차선 함수
   - 빨간 점, 실선: 오른쪽 차선 포인트, 3차 다항식으로 피팅된 오른쪽 차선 함수
@@ -263,19 +265,16 @@ python main.py
   - 보라 사각형: 차량 후륜축 중심
   
 
-    |     ![Image](https://github.com/user-attachments/assets/4dabb9b8-aca6-42e0-9a72-182aedb0d15a) |     ![Image](https://github.com/user-attachments/assets/77bfb545-1fea-4349-996c-131a678b2f15)  |
-    |:--------:|:--------:|
+|     ![Image](https://github.com/user-attachments/assets/4dabb9b8-aca6-42e0-9a72-182aedb0d15a) |     ![Image](https://github.com/user-attachments/assets/77bfb545-1fea-4349-996c-131a678b2f15)  |
+|:--------:|:--------:|
 
 
 
 
 
+---
 
-
-
-    ---
-
-### `main.py`  
+### [main.py](script/main.py)
 - **스크립트 흐름**  
   1. **모듈 임포트 & 초기 설정**  
      - OpenCV 비디오 캡처, Matplotlib 플롯 생성  
