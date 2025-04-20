@@ -4,6 +4,20 @@
 
 
 
+1. 실행 시작
+   ![Image](https://github.com/user-attachments/assets/1dee7d03-a1b1-4b49-aaca-eaaea939b834)
+
+2. 좌회전
+    ![Image](https://github.com/user-attachments/assets/8636e5e5-9f0b-404a-b9ab-b0bb32dffca7)
+
+3. 횡단보도
+    ![Image](https://github.com/user-attachments/assets/c159765d-024a-43fe-8005-710e6d107a34)
+
+4. 우회전
+    ![Image](https://github.com/user-attachments/assets/4c0ecdfd-d7ca-42ff-97c1-b83d36f300b8)
+
+
+
 ## 작동 순서
 
 이 프로젝트는 다음 단계를 순차적으로 수행합니다:
