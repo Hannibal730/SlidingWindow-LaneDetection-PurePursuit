@@ -108,6 +108,11 @@ python main.py
       | ![Image](https://github.com/user-attachments/assets/6195e83f-2a52-4f74-a813-da455d5c44bd)     | ![Image](https://github.com/user-attachments/assets/c7094304-f7a8-411a-bd52-c98b3879e42c) | 
 
 
+      | BEV 이전 | BEV 이후 |
+      |:--------:|:--------:|
+      | <img src="https://github.com/user-attachments/assets/6195e83f-2a52-4f74-a813-da455d5c44bd" width="600px" /> | <img src="https://github.com/user-attachments/assets/c7094304-f7a8-411a-bd52-c98b3879e42c" width="600px" /> |
+
+
 
   2. **그레이스케일 변환**  
      - 컬러(BGR) 프레임을 `cv2.cvtColor(BEV영상, COLOR_BGR2GRAY)`로 그레이스케일 변환  
