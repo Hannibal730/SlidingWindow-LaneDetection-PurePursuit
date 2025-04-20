@@ -91,7 +91,13 @@ python main.py
 
 
 ![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058)
-![Image](https://github.com/user-attachments/assets/941da936-aff3-40c2-bc64-ed07c63f4dcb)
+![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)
+
+
+
+| 미터 단위                     | 픽셀 단위                                                          |
+|-------------------------|--------------------------------------------------------------|
+| ![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058) | ![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)   |
 
 ---
 
