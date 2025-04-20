@@ -35,16 +35,20 @@
 
 ---
 
-## 환경설치 및 실행방법
+## 실행방법
 
-```bash
-# Python 3.7 이상
-pip install opencv-python numpy matplotlib scipy
-```
 
-```bash
-python main.py
-```
+**1. 환경설치**
+
+    ```bash
+    # Python 3.7 이상
+    pip install opencv-python numpy matplotlib scipy
+    ```
+
+**2. main코드 실행**
+    ```bash
+    python main.py
+    ```
 
 ---
 
@@ -75,40 +79,100 @@ python main.py
 
 ### `image_preprocessing.py`  
 - **`Bev_Gray_Blurred_Binary_transform(frame)`**  
-  Bird’s‑Eye View 투시 변환 → 그레이스케일 → 가우시안 블러 → 이진화 처리  
-  → 0/255 바이너리 프레임 반환 :contentReference[oaicite:0]{index=0}&#8203;:contentReference[oaicite:1]{index=1}  
+  1. **투시 변환 (Bird’s‑Eye View)**  
+     - 원본 영상에서 도로 평면이 수직으로 보이도록 4개 기준점(src_pts → dst_pts)으로 투시 매트릭스를 계산  
+     - `cv2.warpPerspective`로 왜곡 보정된 BEV 영상을 생성  
+  2. **그레이스케일 변환**  
+     - 컬러(BGR) 프레임을 `cv2.cvtColor(..., COLOR_BGR2GRAY)`로 회색조 이미지로 변경  
+  3. **가우시안 블러**  
+     - `GaussianBlur` 커널 크기 (19×19), σ=0 으로 노이즈 제거 및 디테일 부드럽게 처리  
+  4. **이진화 (Thresholding)**  
+     - 픽셀 값이 225 이상이면 흰색(255), 그 외 검은색(0)으로 변환  
+     - 결과는 차선 픽셀만 강조된 0/255 바이너리 프레임  
+
+---
 
 ### `lane_histogram.py`  
 - **`histogram_argmax(frame)`**  
-  영상 하단 2/3 영역의 흰 픽셀 합산 히스토그램 생성 →  
-  좌/우 최대값 X 인덱스 및 유효 임계치 반환 :contentReference[oaicite:2]{index=2}&#8203;:contentReference[oaicite:3]{index=3}  
+  1. **하단부 ROI 지정**  
+     - 전체 높이의 아래 약 2/3 지점(1.15·h/3)부터 마지막 행까지 사용  
+  2. **히스토그램 계산**  
+     - ROI 내 모든 열별 흰색 픽셀 합산 → 1차원 배열(hist)  
+  3. **좌/우 피크 인덱스**  
+     - 배열을 절반으로 나눠 좌/우 부분에서 각각 `np.argmax` 호출  
+     - 반환값 L_x, R_x는 초기 차선 윈도우 중앙 X 좌표로 사용  
+  4. **유효 범위 임계치 설정**  
+     - 히스토그램 길이·1/3, 1.6/3 지점에서 좌/우 임계값(L_thr, R_thr) 계산  
+
+---
 
 ### `pixel_to_world.py`  
 - **`pixel_to_meter(x_px, y_px, origin_x, origin_y, S_x, S_y)`**  
-  픽셀 좌표 → 실제 거리(m) 변환 (원점, 스케일링 파라미터 사용) :contentReference[oaicite:4]{index=4}&#8203;:contentReference[oaicite:5]{index=5}  
+  - **원점(origin_x, origin_y)**: 영상 내 차량 위치 기준 픽셀 좌표  
+  - **스케일링(S_x, S_y)**: 픽셀 단위 거리 → 실측(m) 비율  
+  - 공식:  
+    ```python
+    x_meter = (x_px - origin_x) * S_x  
+    y_meter = (origin_y - y_px) * S_y  
+    # 최종 리턴은 (forward, lateral)로 y,x축을 서로 반전
+    return y_meter, -x_meter
+    ```  
+
+---
 
 ### `lane_normal_vector_cal.py`  
-- **`R_normal_vector_cal(x, R_poly)`**, **`L_normal_vector_cal(x, L_poly)`**  
-  차선 다항식에서 접선의 법선 단위벡터 계산 → 0.425 m 만큼 평행 이동 벡터 반환 :contentReference[oaicite:6]{index=6}&#8203;:contentReference[oaicite:7]{index=7}  
+- **`R_normal_vector_cal(x, R_poly_func)`** / **`L_normal_vector_cal(x, L_poly_func)`**  
+  1. 주어진 X 좌표에서 다항식의 도함수를 `np.polyder`로 구함  
+  2. 접선 기울기(m) → 벡터 `[1, m]` 생성  
+  3. 법선 벡터 `[-m, 1]` (또는 `[m, -1]`)을 단위 벡터로 정규화  
+  4. 지정된 **평행 이동 거리 0.425 m**를 곱해, 차선 중심 대신 차량 경로 중간 위치 산출  
+
+---
 
 ### `polynomial_fit.py`  
-- **`R_Polyft_Plotting`**, **`L_Polyft_Plotting`**, **`p_Polyft_Plotting`**, **`nv_p_Polyft_Plotting`**  
-  1차~3차 다항식으로 차선 및 경로 곡선 피팅 →  
-  Matplotlib 플롯 업데이트 후 `np.poly1d` 함수 반환 :contentReference[oaicite:8]{index=8}&#8203;:contentReference[oaicite:9]{index=9}  
+- **`R_Polyft_Plotting`, `L_Polyft_Plotting`**  
+  - 각각 3차(오른쪽), 1차(왼쪽) 다항식 조건으로 `np.polyfit` 수행  
+  - `np.poly1d` 반환하며, 플롯 위에 피팅 곡선(300개 점)을 실시간 업데이트  
+- **`p_Polyft_Plotting`, `nv_p_Polyft_Plotting`**  
+  - 중간 경로(Path)와 법선 벡터 경로(nv Path)에 대해 3차 또는 가변 차수(N) 피팅  
+  - Matplotlib 선 제거/추가 로직 포함  
+
+---
 
 ### `pure_pursuit.py`  
 - **`lookahead_point_cal(a, b, r, poly_func, nv_pts)`**  
-  차량 중심 (a,b), 반지름 r 원과 경로 곡선의 교점(룩어헤드 포인트) 계산  
-- **`lookahead_point_vec_cal`**, **`angle_between_vectors`**, **`delta_raidians_cal`**  
-  벡터 변환 → 각도 계산 → Pure Pursuit 공식에 따른 조향각(라디안) 산출 :contentReference[oaicite:10]{index=10}&#8203;:contentReference[oaicite:11]{index=11}  
+  1. 차량 중심 (a,b)에서 반지름 r 원 방정식과 `poly_func(x)` 교점 찾기(`fsolve`)  
+  2. 초기 r = `Ld(=2.5)`m 시도 → 실패 시 최대 10m까지 1m 단위로 반지름 증가 재시도  
+  3. 양수 X 해만 남겨 `[(x_sol, y_sol)]` 형태 리스트 반환  
+- **`lookahead_point_vec_cal(pt_x, pt_y)`**  
+  - 룩어헤드 좌표로부터 차량 기준점(오프셋 1.341m) 차이 벡터 계산  
+- **`angle_between_vectors(v1, v2)`**  
+  - 두 벡터 내적/크기 → 코사인값 → `arccos` → 부호(우회전 시 음수) 적용  
+- **`delta_raidians_cal(alpha)`**  
+  - Pure Pursuit δ = arctan(2·L·sin α / Ld) 공식으로 최종 조향각 도출  
+
+---
 
 ### `visualization.py`  
 - **`create_lane_plot()`**  
-  Matplotlib Figure/Axis 생성, 축 범위 및 레이블 설정, 차량 후륜 축 표시,  
-  좌/우 차선·경로·룩어헤드 포인트를 위한 빈 Scatter/Line2D 객체 초기화 후 반환 :contentReference[oaicite:12]{index=12}&#8203;:contentReference[oaicite:13]{index=13}  
+  1. `plt.subplots`로 Figure/Axis 생성, 크기 11×6  
+  2. X(0→≈3.34m), Y(−1.2→1.2m) 축 범위 및 그리드 설정  
+  3. 차량 후륜축 위치를 보라색 사각형으로 표시  
+  4. 빈 Scatter/Line2D 객체(좌/우 차선, 경로, 법선 경로, 룩어헤드)를 반환  
+
+---
 
 ### `main.py`  
 - **`main()`**  
-  1. 비디오 캡처  
-  2. 프레임별: 전처리 → 히스토그램 → 윈도우 처리 → 좌표 변환 → 피팅 → Pure Pursuit → 시각화  
-  3. 종료 시 리소스 해제  
+  1. `cv2.VideoCapture`로 비디오 파일 열기  
+  2. 프레임별 반복  
+     - 전처리 → 히스토그램 → 슬라이딩 윈도우로 픽셀 탐색  
+     - 월드 좌표 변환 → 다항식 피팅 → 법선 벡터 경로 생성  
+     - Pure Pursuit 룩어헤드 포인트 & 조향각 계산  
+     - 원본·윈도우·피팅 플롯을 실시간 갱신  
+  3. 종료 시 `cap.release()`, `cv2.destroyAllWindows()` 호출  
+
+
+
+
+---
