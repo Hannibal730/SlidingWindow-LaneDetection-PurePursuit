@@ -102,8 +102,13 @@ python main.py
   1. **Bird’s‑Eye View 변환**  
      - 원본 영상에서 도로 평면이 수직으로 보이도록 4개 기준점(src_pts → dst_pts)으로 BEV 매트릭스 생성
      - BEV 매트릭스와 `cv2.warpPerspective`로 BEV 영상을 생성
-     - ![Image](https://github.com/user-attachments/assets/6195e83f-2a52-4f74-a813-da455d5c44bd) 
-     - ![Image](https://github.com/user-attachments/assets/c7094304-f7a8-411a-bd52-c98b3879e42c)
+
+      | BEV 이전     |  BEV 이후   |
+      |-------------------------|--------------------------------------------------------------|
+      | ![Image](https://github.com/user-attachments/assets/6195e83f-2a52-4f74-a813-da455d5c44bd)     | ![Image](https://github.com/user-attachments/assets/c7094304-f7a8-411a-bd52-c98b3879e42c) | 
+
+
+
   2. **그레이스케일 변환**  
      - 컬러(BGR) 프레임을 `cv2.cvtColor(BEV영상, COLOR_BGR2GRAY)`로 그레이스케일 변환  
   3. **가우시안 블러**  
@@ -114,10 +119,11 @@ python main.py
      - 결과는 검은색 바탕에 흰색 차선만 나타나는 영상
 
 
-     - 가우시안 블러 없이 이진화 마친 버전
-     - ![Image](https://github.com/user-attachments/assets/f7fee490-c1a5-426d-91f8-d7b37c7c4b23)
-     - 가우시안 블러하고 이진화한 버전
-     - ![Image](https://github.com/user-attachments/assets/f519e5f9-422b-467b-bbce-a77733ef850c)
+      | 가우시안 블러 없음     |  가우시안 블러 처리   |
+      |-------------------------|--------------------------------------------------------------|
+      | ![Image](https://github.com/user-attachments/assets/f7fee490-c1a5-426d-91f8-d7b37c7c4b23)     | ![Image](https://github.com/user-attachments/assets/f519e5f9-422b-467b-bbce-a77733ef850c)    | 
+
+
 
 
 
@@ -134,7 +140,7 @@ python main.py
      - 전체 높이의 아래 약 2/3 지점(1.15·h/3)부터 마지막 행까지 사용  
   2. **히스토그램 계산**  
      - ROI 내 모든 열별 흰색 픽셀 합산하여 히스토그램 생성
-     - ![Image](https://github.com/user-attachments/assets/63d69952-a237-472a-946e-b6d05d713e44) 
+       ![Image](https://github.com/user-attachments/assets/63d69952-a237-472a-946e-b6d05d713e44) 
   3. **좌/우 차선 시작점 계산**  
      - 하스토그램을 절반으로 나눠 좌/우 부분에서 각각 `np.argmax` 계산하고, 각각 L_x, R_x 로 반환
      - L_x, R_x는 최초 바운딩 박스 시작지점으로 사용  
@@ -164,9 +170,9 @@ python main.py
     ```  
 
 
-| 픽셀 단위                     | 미터 단위                                                          |
-|-------------------------|--------------------------------------------------------------|
-| ![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)| ![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058) |   
+    | 픽셀 단위                     | 미터 단위                                                          |
+    |-------------------------|--------------------------------------------------------------|
+    | ![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)| ![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058) |   
 
 
 
@@ -179,13 +185,25 @@ python main.py
   - 이진화된 프레임에서 하단 히스토그램을 구해 초기 좌/우 차선 위치 추정  
   - 슬라이딩 윈도우 반복으로 차선 픽셀 수집 → 픽셀→미터 좌표 변환 → 좌/우 차선의 포인트 리스트 (p_pts) 생성
   - 슬라이딩 윈도우로 생성한 차선 포인트가 검정 픽셀일 경우, 그 픽셀을 기준으로 더 외곽에서 흰색 픽셀 중 선택
-  - ![Image](https://github.com/user-attachments/assets/b682be67-b525-4ced-b765-cbc6237eac26)
-  - ![Image](https://github.com/user-attachments/assets/825be0c3-d01c-4f89-816e-0b945a4ffa68)
+
+    | 검정픽셀 선택     |  흰섹 픽셀 선택   |
+    |-------------------------|--------------------------------------------------------------|
+    | ![Image](https://github.com/user-attachments/assets/b682be67-b525-4ced-b765-cbc6237eac26)     | ![Image](https://github.com/user-attachments/assets/825be0c3-d01c-4f89-816e-0b945a4ffa68)   | 
+
+
+
+
+
   - p_pts를 polynomial fitting 처리하여 좌/우 차선함수 생성. (홀수 차수 사용)
 - 평행이동
   - 왼쪽 차선은 점선이라서 포인트 개수가 부족하다. 반면에 오른쪽 차선은 실선이라서 포인트 개수가 풍족하다. 따라서 오른쪽 차선을 평행이동하여 경로함수를 생성한다.
+  
 - 평행이동 시 법선벡터의 필요성
-  - 차선함수를 단순 평행이동하여 경로함수를 제작할 경우에 왜곡이 발생한다. 따라서 차선함수의 법선벡터를 계산하고, 차선함수를 법선벡터 방향으로 평행이동하여 경로함수를 제작해야 한다.
+  - 차선함수를 단순 평행이동하여 경로함수를 제작할 경우에 왜곡이 발생한다. 따라서 차선함수의 법선벡터를 계산하고, 차선함수를 법선벡터 방향으로 평행이동하여 경로함수를 제작해야 한다. 
+    ![Image](https://github.com/user-attachments/assets/77bfb545-1fea-4349-996c-131a678b2f15)
+    - 초록 실선: 빨간 실선을 단순 평행이동
+    - 검정 실선: 법선 벡터를 반영한 채로 빨간 실선을 평행이동
+  
   - p_pts를 법선벡터 방향으로 평행이동하여 nv_pts(normal vextor points list) 를 제작하고, polinormial fitting 처리하여 경로함수를 제작한다.
    
 - **`process(binary_frame, ax, L_sc, R_sc, p_sc, nv_sc)`**  
@@ -245,14 +263,9 @@ python main.py
   - 보라 사각형: 차량 후륜축 중심
   
 
-법선벡터
-![Image](https://github.com/user-attachments/assets/77bfb545-1fea-4349-996c-131a678b2f15)
+    ![Image](https://github.com/user-attachments/assets/4dabb9b8-aca6-42e0-9a72-182aedb0d15a)
 
-
-파랑선
-![Image](https://github.com/user-attachments/assets/4dabb9b8-aca6-42e0-9a72-182aedb0d15a)
-
----
+    ---
 
 ### `main.py`  
 - **스크립트 흐름**  
@@ -284,3 +297,6 @@ python main.py
      - `cap.release()`, `cv2.destroyAllWindows()` 호출  
 
 ---
+
+## 멘토
+건국대학교 로봇동아리 돌밭 자율주행팀 임현우
