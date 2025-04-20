@@ -4,19 +4,25 @@
 
 
 
-1. 실행 시작
+### 1. 직선구간
    ![Image](https://github.com/user-attachments/assets/1dee7d03-a1b1-4b49-aaca-eaaea939b834)
 
-2. 좌회전
+<br>
+
+### 2. 좌회전
     ![Image](https://github.com/user-attachments/assets/8636e5e5-9f0b-404a-b9ab-b0bb32dffca7)
 
-3. 횡단보도
+<br>
+
+### 3. 횡단보도
     ![Image](https://github.com/user-attachments/assets/c159765d-024a-43fe-8005-710e6d107a34)
 
-4. 우회전
+<br>
+
+### 4. 우회전
     ![Image](https://github.com/user-attachments/assets/4c0ecdfd-d7ca-42ff-97c1-b83d36f300b8)
 
-
+---
 
 ## 작동 순서
 
@@ -35,24 +41,30 @@
 
 ---
 
+<br>
+
 ## 실행방법
 
+**1. Git clone**
+```bash
+git clone https://github.com/Hannibal730/SlidingWindow-LaneDetection-PurePursuit.git
+```
 
-**1. 환경설치**
+**2. 환경설치**
 
-    ```bash
-    # Python 3.7 이상
-    pip install opencv-python numpy matplotlib scipy
-    ```
+```bash
+# Python 3.7 이상
+pip install opencv-python numpy matplotlib scipy
+```
 
-**2. main코드 실행**
-    ```bash
-    python main.py
-    ```
+**3. main코드 실행**
+```bash
+python main.py
+```
 
 ---
 
-
+<br>
 
 
 ## 주요 파라미터
