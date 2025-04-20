@@ -106,7 +106,7 @@ def main():
                     vec   = lookahead_point_vec_cal(pt[0], pt[1])
                     alpha = angle_between_vectors(car_dir, vec)
                     delta = delta_raidians_cal(alpha)
-                    print(f"alpha: {alpha:.3f}, delta: {delta:.3f}")
+                    print(f"heading error (rad)): {alpha:.3f}, steering angle (rad): {delta:.3f}")
 
         # 5) Matplotlib 플롯을 OpenCV 이미지로 변환
         canvas = FigureCanvas(fig)
