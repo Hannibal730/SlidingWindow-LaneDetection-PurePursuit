@@ -9,7 +9,7 @@ import math
 from plot_setup import create_lane_plot
 from preprocessing import Bev_Gray_Blurred_Binary_transform, histogram_argmax
 
-cap = cv2.VideoCapture("test_video.mp4")
+cap = cv2.VideoCapture("test_video_640x480.mp4")
 
 
 
