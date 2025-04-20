@@ -103,11 +103,6 @@ python main.py
      - 원본 영상에서 도로 평면이 수직으로 보이도록 4개 기준점(src_pts → dst_pts)으로 BEV 매트릭스 생성
      - BEV 매트릭스와 `cv2.warpPerspective`로 BEV 영상을 생성
 
-      | BEV 이전     |  BEV 이후   |
-      |-------------------------|--------------------------------------------------------------|
-      | ![Image](https://github.com/user-attachments/assets/6195e83f-2a52-4f74-a813-da455d5c44bd)     | ![Image](https://github.com/user-attachments/assets/c7094304-f7a8-411a-bd52-c98b3879e42c) | 
-
-
       | BEV 이전 | BEV 이후 |
       |:--------:|:--------:|
       | <img src="https://github.com/user-attachments/assets/6195e83f-2a52-4f74-a813-da455d5c44bd" width="600px" /> | <img src="https://github.com/user-attachments/assets/c7094304-f7a8-411a-bd52-c98b3879e42c" width="600px" /> |
@@ -116,16 +111,16 @@ python main.py
 
   2. **그레이스케일 변환**  
      - 컬러(BGR) 프레임을 `cv2.cvtColor(BEV영상, COLOR_BGR2GRAY)`로 그레이스케일 변환  
-  3. **가우시안 블러**  
+  1. **가우시안 블러**  
      - `GaussianBlur` 커널 크기 (19×19), σ=0 으로 노이즈 제거
 
-  4. **이진화 (Thresholding)**  
+  1. **이진화 (Thresholding)**  
      - 픽셀 값이 225 이상이면 흰색(255), 그 외 검은색(0)으로 변환  
      - 결과는 검은색 바탕에 흰색 차선만 나타나는 영상
 
 
       | 가우시안 블러 없음     |  가우시안 블러 처리   |
-      |-------------------------|--------------------------------------------------------------|
+      |:--------:|:--------:|
       | ![Image](https://github.com/user-attachments/assets/f7fee490-c1a5-426d-91f8-d7b37c7c4b23)     | ![Image](https://github.com/user-attachments/assets/f519e5f9-422b-467b-bbce-a77733ef850c)    | 
 
 
@@ -144,7 +139,7 @@ python main.py
   1. **하단부 ROI 지정**  
      - 전체 높이의 아래 약 2/3 지점(1.15·h/3)부터 마지막 행까지 사용  
   2. **히스토그램 계산**  
-     - ROI 내 모든 열별 흰색 픽셀 합산하여 히스토그램 생성
+     - ROI 내 모든 column별로 흰색 픽셀 합산하여 히스토그램 생성
        ![Image](https://github.com/user-attachments/assets/63d69952-a237-472a-946e-b6d05d713e44) 
   3. **좌/우 차선 시작점 계산**  
      - 하스토그램을 절반으로 나눠 좌/우 부분에서 각각 `np.argmax` 계산하고, 각각 L_x, R_x 로 반환
@@ -176,7 +171,7 @@ python main.py
 
 
     | 픽셀 단위                     | 미터 단위                                                          |
-    |-------------------------|--------------------------------------------------------------|
+    |:--------:|:--------:|
     | ![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)| ![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058) |   
 
 
@@ -192,7 +187,7 @@ python main.py
   - 슬라이딩 윈도우로 생성한 차선 포인트가 검정 픽셀일 경우, 그 픽셀을 기준으로 더 외곽에서 흰색 픽셀 중 선택
 
     | 검정픽셀 선택     |  흰섹 픽셀 선택   |
-    |-------------------------|--------------------------------------------------------------|
+    |:--------:|:--------:|
     | ![Image](https://github.com/user-attachments/assets/b682be67-b525-4ced-b765-cbc6237eac26)     | ![Image](https://github.com/user-attachments/assets/825be0c3-d01c-4f89-816e-0b945a4ffa68)   | 
 
 
@@ -205,6 +200,8 @@ python main.py
   
 - 평행이동 시 법선벡터의 필요성
   - 차선함수를 단순 평행이동하여 경로함수를 제작할 경우에 왜곡이 발생한다. 따라서 차선함수의 법선벡터를 계산하고, 차선함수를 법선벡터 방향으로 평행이동하여 경로함수를 제작해야 한다. 
+    ![Image](https://github.com/user-attachments/assets/ee76caeb-0192-4e59-8753-8926ea7b8e89)
+    
     ![Image](https://github.com/user-attachments/assets/77bfb545-1fea-4349-996c-131a678b2f15)
     - 초록 실선: 빨간 실선을 단순 평행이동
     - 검정 실선: 법선 벡터를 반영한 채로 빨간 실선을 평행이동
