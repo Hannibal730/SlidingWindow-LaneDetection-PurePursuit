@@ -308,7 +308,7 @@ python main.py
 
 ---
 
-<br><
+<br>
 
 ## 최종 결과
 
