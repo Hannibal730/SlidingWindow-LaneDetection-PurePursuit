@@ -1,6 +1,7 @@
 # Lane Detection & Pure Pursuit for Steering Angle of Local Path Planning
 
-로컬 주행 영상을 입력받아 **슬라이딩 윈도우** 기반 차선 검출 기법과 **퓨어 퍼슈트(Pure Pursuit)** 알고리즘을 결합하는 프로젝트입니다. 이를 통해 실시간으로 조향각을 산출하고, 경로함수를 생성·시각화합니다.
+로컬 주행 영상을 입력받아 **슬라이딩 윈도우** 기반 차선 검출 기법과 **퓨어 퍼슈트(Pure Pursuit)** 알고리즘을 결합하는 프로젝트입니다. 이를 통해 차선 기반 주행 경로를 실시간으로 생성하고, 해당 경로를 따라 차량 조향 각도를 산출합니다.
+
 
 
 
@@ -24,26 +25,28 @@
 
 ---
 
-## 작동 순서
+## 작동 과정
 
-이 프로젝트는 다음 단계를 순차적으로 수행합니다:
+이 프로젝트는 다음 단계를 순차적으로 수행합니다
 
-1. **영상 입력**: `cv2.VideoCapture`로 지정 경로의 비디오를 읽고, 프레임 단위로 처리
-2. **전처리**: Bird’s Eye View(투시 변환) → 그레이스케일 → 가우시안 블러 → 이진화
-3. **초기 차선 위치 추정**: 영상 하단부 흰 픽셀 히스토그램을 이용해 좌/우 차선의 대략적 x좌표 계산
-4. **슬라이딩 윈도우**: 각 윈도우에서 흰 픽셀을 추적, 평균 좌표 산출 → 픽셀 좌표계에서 미터 좌표계로 변환
-5. **다항식 피팅**: `np.polyfit`로 차선 및 주행 경로에 다항식(1~3차) 모델 적합
-6. **룩어헤드**: 차량 전방 원과 경로 다항식 교점을 `scipy.optimize.fsolve`로 풀이
-7. **퓨어 퍼슈트**: 벡터 내적 및 삼각함수를 이용해 조향각 계산
-8. **시각화**: OpenCV (`imshow`) + Matplotlib(`FigureCanvas`)으로 결과 출력
+1. **영상 입력**: `cv2.VideoCapture`로 로컬 경로의 비디오(640x480)를 읽고, 프레임 단위로 처리
+2. **전처리**: Bird’s Eye View 변환 → 그레이스케일 → 가우시안 블러 → 이진화
+3. **초기 차선 위치 추정**: 히스토그램으로 영상 하단부 흰 픽셀 (차선)의 분포를 계산 → 좌/우 차선의 시작지점 계산
+4. **슬라이딩 윈도우**: 개별 윈도우마다 흰 픽셀의 평균 좌표를 차선 포인트로 계산. (평균 좌표가 검정 픽셀 위인 경우는 별도 처리)
+5. **좌표계 변환**: 현실 세계에서의 제어를 위해서 픽셀 좌표계를 미터 좌표계로 변환
+6. **다항식 피팅**: 차선 포인트를 `np.polyfit`로 다항식(1 or 3차) 모델에 피팅하여 좌/우 차선함수 생성
+7. **법선벡터 평행이동**: 오른쪽 차선함수를 법선벡터 방향으로 평행이동하여 경로함수 생성
+8. **룩어헤드 포인트**: 후륜축 중심 원과 경로함수의 교점을 `scipy.optimize.fsolve`로 계산. (교점 없다면 원의 반지름 점차 증가)
+9. **퓨어 퍼슛**: 벡터 내적 및 삼각함수를 이용해 조향각 계산
+10. **시각화**: 원본 영상, 슬라이딩 윈도우 영상, 차선 및 경로함수 영상, 조향각을 동시에 출력
 
-이를 통해 차선 기반 주행 경로를 실시간으로 생성하고, 해당 경로를 따라 차량 조향 각도를 산출합니다.
 
 ---
 
 <br>
 
 ## 실행방법
+
 
 **1. Git clone**
 ```bash
@@ -62,6 +65,8 @@ pip install opencv-python numpy matplotlib scipy
 python main.py
 ```
 
+
+
 ---
 
 <br>
@@ -76,13 +81,17 @@ python main.py
 | `lane_pixel_width`      | 영상 상 차선 폭 픽셀 길이 (`569-28`)                         | `541`      |
 | `actuaL_lane_length`    | 차선 길이 기준 (m)                                           | `0.5`      |
 | `lane_pixel_length`     | 픽셀 길이 (`247-123`)                                        | `124`      |
-| `S_x, S_y`              | 픽셀→미터 변환 비율: `actuaL_lane_width/lane_pixel_width`, `actuaL_lane_length/lane_pixel_length` | 계산 자동 |
+| `S_x, S_y`              | 픽셀→미터 변환 비율: `actuaL_lane_width/lane_pixel_width`, `actuaL_lane_length/lane_pixel_length` | 0.5m / (247-123), 0.85m  <br>  (569-28) |
 | `R_num_windows, L_num_windows` | 윈도우 개수 (오른쪽 25, 왼쪽 6)                 | `25, 6`    |
 | `R_margin, L_margin`    | 윈도우 반폭 (픽셀)                                            | `60, 150`  |
 | `min_points`            | 윈도우 내 최소 검사 픽셀 수                                    | `10`       |
 | `R_consistency_threshold, L_consistency_threshold` | x좌표 이동 한계 (픽셀)           | `560,600`  |
 | `Ld`                    | 룩어헤드 탐색 반경 (m)                                        | `2.5`      |
 | `L`                     | 휠베이스 (m)                                                 | `0.55`     |
+
+
+![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058)
+![Image](https://github.com/user-attachments/assets/941da936-aff3-40c2-bc64-ed07c63f4dcb)
 
 ---
 
