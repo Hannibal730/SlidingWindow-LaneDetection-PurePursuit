@@ -172,14 +172,18 @@ python main.py
 
 ---
 
-### `lane_normal_vector_cal.py`  
-- **`R_normal_vector_cal(x, R_poly_func)`** / **`L_normal_vector_cal(x, L_poly_func)`**  
-  1. 주어진 X 좌표에서 다항식의 도함수를 `np.polyder`로 구함  
-  2. 접선 기울기(m) → 벡터 `[1, m]` 생성  
-  3. 법선 벡터 `[-m, 1]` (또는 `[m, -1]`)을 단위 벡터로 정규화  
-  4. 지정된 **평행 이동 거리 0.425 m**를 곱해, 차선 중심 대신 차량 경로 중간 위치 산출  
+### `main.py`  
+- **`main()`**  
+  1. `cv2.VideoCapture`로 비디오 파일 열기  
+  2. 프레임별 반복  
+     - 전처리 → 히스토그램 → 슬라이딩 윈도우로 픽셀 탐색  
+     - 월드 좌표 변환 → 다항식 피팅 → 법선 벡터 경로 생성  
+     - Pure Pursuit 룩어헤드 포인트 & 조향각 계산  
+     - 원본·윈도우·피팅 플롯을 실시간 갱신  
+  3. 종료 시 `cap.release()`, `cv2.destroyAllWindows()` 호출  
 
 ---
+
 
 ### `polynomial_fit.py`  
 - **`R_Polyft_Plotting`, `L_Polyft_Plotting`**  
@@ -188,6 +192,18 @@ python main.py
 - **`p_Polyft_Plotting`, `nv_p_Polyft_Plotting`**  
   - 중간 경로(Path)와 법선 벡터 경로(nv Path)에 대해 3차 또는 가변 차수(N) 피팅  
   - Matplotlib 선 제거/추가 로직 포함  
+
+---
+
+
+### `lane_normal_vector_cal.py`  
+- **`R_normal_vector_cal(x, R_poly_func)`** / **`L_normal_vector_cal(x, L_poly_func)`**  
+  1. 주어진 X 좌표에서 다항식의 도함수를 `np.polyder`로 구함  
+  2. 접선 기울기(m) → 벡터 `[1, m]` 생성  
+  3. 법선 벡터 `[-m, 1]` (또는 `[m, -1]`)을 단위 벡터로 정규화  
+  4. 지정된 **평행 이동 거리 0.425 m**를 곱해, 차선 중심 대신 차량 경로 중간 위치 산출  
+
+
 
 ---
 
