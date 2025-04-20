@@ -200,11 +200,9 @@ python main.py
   
 - 평행이동 시 법선벡터의 필요성
   - 차선함수를 단순 평행이동하여 경로함수를 제작할 경우에 왜곡이 발생한다. 따라서 차선함수의 법선벡터를 계산하고, 차선함수를 법선벡터 방향으로 평행이동하여 경로함수를 제작해야 한다. 
-    ![Image](https://github.com/user-attachments/assets/ee76caeb-0192-4e59-8753-8926ea7b8e89)
-    
-    ![Image](https://github.com/user-attachments/assets/77bfb545-1fea-4349-996c-131a678b2f15)
-    - 초록 실선: 빨간 실선을 단순 평행이동
-    - 검정 실선: 법선 벡터를 반영한 채로 빨간 실선을 평행이동
+  
+    ![Image](https://github.com/user-attachments/assets/9a3602e4-025c-497c-8359-2f5c6f5ea345)
+  
   
   - p_pts를 법선벡터 방향으로 평행이동하여 nv_pts(normal vextor points list) 를 제작하고, polinormial fitting 처리하여 경로함수를 제작한다.
    
@@ -265,7 +263,15 @@ python main.py
   - 보라 사각형: 차량 후륜축 중심
   
 
-    ![Image](https://github.com/user-attachments/assets/4dabb9b8-aca6-42e0-9a72-182aedb0d15a)
+    |     ![Image](https://github.com/user-attachments/assets/4dabb9b8-aca6-42e0-9a72-182aedb0d15a) |     ![Image](https://github.com/user-attachments/assets/77bfb545-1fea-4349-996c-131a678b2f15)  |
+    |:--------:|:--------:|
+
+
+
+
+
+
+
 
     ---
 
@@ -302,3 +308,5 @@ python main.py
 
 ## 멘토
 건국대학교 로봇동아리 돌밭 자율주행팀 임현우
+
+
