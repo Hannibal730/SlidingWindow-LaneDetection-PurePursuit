@@ -32,12 +32,12 @@
 1. **영상 입력**: `cv2.VideoCapture`로 로컬 경로의 비디오(640x480)를 읽고, 프레임 단위로 처리
 2. **전처리**: Bird’s Eye View 변환 → 그레이스케일 → 가우시안 블러 → 이진화
 3. **초기 차선 위치 추정**: 히스토그램으로 영상 하단부 흰 픽셀 (차선)의 분포를 계산 → 좌/우 차선의 시작지점 계산
-4. **슬라이딩 윈도우**: 개별 윈도우마다 흰 픽셀의 평균 좌표를 차선 포인트로 계산. (평균 좌표가 검정 픽셀 위인 경우는 별도 처리)
-5. **좌표계 변환**: 현실 세계에서의 제어를 위해서 픽셀 좌표계를 미터 좌표계로 변환
+4. **좌표계 변환**: 현실 세계에서의 제어를 위해서 픽셀 좌표계를 미터 좌표계로 변환
+5. **슬라이딩 윈도우**: 개별 윈도우마다 흰 픽셀의 평균 좌표를 차선 포인트로 계산. (평균 좌표가 검정 픽셀 위인 경우는 별도 처리)
 6. **다항식 피팅**: 차선 포인트를 `np.polyfit`로 다항식(1 or 3차) 모델에 피팅하여 좌/우 차선함수 생성
 7. **법선벡터 평행이동**: 오른쪽 차선함수를 법선벡터 방향으로 평행이동하여 경로함수 생성
 8. **룩어헤드 포인트**: 후륜축 중심 원과 경로함수의 교점을 `scipy.optimize.fsolve`로 계산. (교점 없다면 원의 반지름 점차 증가)
-9. **퓨어 퍼슛**: 벡터 내적 및 삼각함수를 이용해 조향각 계산
+9.  **퓨어 퍼슛**: 벡터 내적 및 삼각함수를 이용해 조향각 계산
 10. **시각화**: 원본 영상, 슬라이딩 윈도우 영상, 차선 및 경로함수 영상, 조향각을 동시에 출력
 
 
@@ -164,34 +164,48 @@ python main.py
     ```  
 
 
-| 픽셀 단위                     | 미터 단위 단위                                                          |
+| 픽셀 단위                     | 미터 단위                                                          |
 |-------------------------|--------------------------------------------------------------|
 | ![Image](https://github.com/user-attachments/assets/732b095c-e626-4de1-b454-6d935d45b683)| ![Image](https://github.com/user-attachments/assets/a19ab31c-32f9-45ca-a16d-3cc2766cb058) |   
 
 
 
+
+
 ---
 
-### `main.py`  
-- **`main()`**  
-  1. `cv2.VideoCapture`로 비디오 파일 열기  
-  2. 프레임별 반복  
-     - 전처리 → 히스토그램 → 슬라이딩 윈도우로 픽셀 탐색  
-     - 월드 좌표 변환 → 다항식 피팅 → 법선 벡터 경로 생성  
-     - Pure Pursuit 룩어헤드 포인트 & 조향각 계산  
-     - 원본·윈도우·피팅 플롯을 실시간 갱신  
-  3. 종료 시 `cap.release()`, `cv2.destroyAllWindows()` 호출  
+### `sliding_window.py`  
+- **`SlidingWindow` 클래스**  
+  - 이진화된 프레임에서 하단 히스토그램을 구해 초기 좌/우 차선 위치 추정  
+  - 슬라이딩 윈도우 반복으로 차선 픽셀 수집 → 픽셀→미터 좌표 변환 → 좌/우 차선의 포인트 리스트 (p_pts) 생성
+  - 슬라이딩 윈도우로 생성한 차선 포인트가 검정 픽셀일 경우, 그 픽셀을 기준으로 더 외곽에서 흰색 픽셀 중 선택
+  - ![Image](https://github.com/user-attachments/assets/b682be67-b525-4ced-b765-cbc6237eac26)
+  - ![Image](https://github.com/user-attachments/assets/825be0c3-d01c-4f89-816e-0b945a4ffa68)
+  - p_pts를 polynomial fitting 처리하여 좌/우 차선함수 생성. (홀수 차수 사용)
+- 평행이동
+  - 왼쪽 차선은 점선이라서 포인트 개수가 부족하다. 반면에 오른쪽 차선은 실선이라서 포인트 개수가 풍족하다. 따라서 오른쪽 차선을 평행이동하여 경로함수를 생성한다.
+- 평행이동 시 법선벡터의 필요성
+  - 차선함수를 단순 평행이동하여 경로함수를 제작할 경우에 왜곡이 발생한다. 따라서 차선함수의 법선벡터를 계산하고, 차선함수를 법선벡터 방향으로 평행이동하여 경로함수를 제작해야 한다.
+  - p_pts를 법선벡터 방향으로 평행이동하여 nv_pts(normal vextor points list) 를 제작하고, polinormial fitting 처리하여 경로함수를 제작한다.
+   
+- **`process(binary_frame, ax, L_sc, R_sc, p_sc, nv_sc)`**  
+  1. `histogram_argmax` 호출 → `Lx_arg`, `Rx_arg`, 임계치 계산  
+  2. `window_info`로 각 윈도우의 픽셀 좌표 및 평균 좌표 획득  
+  3. `pixel_to_meter`로 월드 좌표 변환 → `R_pts_m`, `L_pts_m`, `p_pts`, `nv_pts` 리스트 적재  
+  4. `R_Polyft_Plotting`·`L_Polyft_Plotting`·`R_normal_vector_cal` 호출  
+  5. 최종 `result_frame`(컬러 윈도우 표시)와 4개 포인트 리스트를 반환  
+
 
 ---
 
 
 ### `polynomial_fit.py`  
 - **`R_Polyft_Plotting`, `L_Polyft_Plotting`**  
-  - 각각 3차(오른쪽), 1차(왼쪽) 다항식 조건으로 `np.polyfit` 수행  
+  - 오른쪽 차선은 포인트 개수가 충분하기 때문에 3차 다항식으로, 왼쪽 차선은 포인트 개수가 부족하기 때문에 1차 다항식으로 `np.polyfit` 진행
   - `np.poly1d` 반환하며, 플롯 위에 피팅 곡선(300개 점)을 실시간 업데이트  
 - **`p_Polyft_Plotting`, `nv_p_Polyft_Plotting`**  
-  - 중간 경로(Path)와 법선 벡터 경로(nv Path)에 대해 3차 또는 가변 차수(N) 피팅  
-  - Matplotlib 선 제거/추가 로직 포함  
+  - 단순 평행이동 버전 중간 경로함수(Path)와 법선 벡터 보정한 버전의 경로함수(nv Path)에 대해 3차 다함식 피팅  
+- 
 
 ---
 
@@ -201,7 +215,7 @@ python main.py
   1. 주어진 X 좌표에서 다항식의 도함수를 `np.polyder`로 구함  
   2. 접선 기울기(m) → 벡터 `[1, m]` 생성  
   3. 법선 벡터 `[-m, 1]` (또는 `[m, -1]`)을 단위 벡터로 정규화  
-  4. 지정된 **평행 이동 거리 0.425 m**를 곱해, 차선 중심 대신 차량 경로 중간 위치 산출  
+  4. 단위 벡터에 도로 폭의 절반인 ** 0.425 m**를 법선벡터에 곱해, 경로함수를 위한 법선벡터를 제작한다.
 
 
 
@@ -213,34 +227,60 @@ python main.py
   2. 초기 r = `Ld(=2.5)`m 시도 → 실패 시 최대 10m까지 1m 단위로 반지름 증가 재시도  
   3. 양수 X 해만 남겨 `[(x_sol, y_sol)]` 형태 리스트 반환  
 - **`lookahead_point_vec_cal(pt_x, pt_y)`**  
-  - 룩어헤드 좌표로부터 차량 기준점(오프셋 1.341m) 차이 벡터 계산  
+  - 룩어헤드 포인트로부터 차량 후륜축 중심까지의 벡터 계산  (거리는 1.341m 고정)
 - **`angle_between_vectors(v1, v2)`**  
   - 두 벡터 내적/크기 → 코사인값 → `arccos` → 부호(우회전 시 음수) 적용  
 - **`delta_raidians_cal(alpha)`**  
-  - Pure Pursuit δ = arctan(2·L·sin α / Ld) 공식으로 최종 조향각 도출  
+  - Pure Pursuit δ = arctan(2·L·sin α / Ld) 공식으로 최종 조향각 계산 
 
 ---
 
 ### `visualization.py`  
 - **`create_lane_plot()`**  
-  1. `plt.subplots`로 Figure/Axis 생성, 크기 11×6  
-  2. X(0→≈3.34m), Y(−1.2→1.2m) 축 범위 및 그리드 설정  
-  3. 차량 후륜축 위치를 보라색 사각형으로 표시  
-  4. 빈 Scatter/Line2D 객체(좌/우 차선, 경로, 법선 경로, 룩어헤드)를 반환  
+  - 파란 점, 실선: 왼쪽 차선 포인트, 1차 다항식으로 피팅된 왼쪽 차선 함수
+  - 빨간 점, 실선: 오른쪽 차선 포인트, 3차 다항식으로 피팅된 오른쪽 차선 함수
+  - 초록 점, 실선: 법선벡터 보정을 하지 않고 단순히 오른쪽 차선 함수를 평행이동한 포인트, 경로함수
+  - 검정 점, 실선: 법센벡터 보정한 채로 오른쪽 차선 함수를 평행이동한 포인트, 경로함수
+  - 노란 점: 룩어헤드 포인트
+  - 보라 사각형: 차량 후륜축 중심
+  
+
+법선벡터
+![Image](https://github.com/user-attachments/assets/77bfb545-1fea-4349-996c-131a678b2f15)
+
+
+파랑선
+![Image](https://github.com/user-attachments/assets/4dabb9b8-aca6-42e0-9a72-182aedb0d15a)
 
 ---
 
 ### `main.py`  
-- **`main()`**  
-  1. `cv2.VideoCapture`로 비디오 파일 열기  
-  2. 프레임별 반복  
-     - 전처리 → 히스토그램 → 슬라이딩 윈도우로 픽셀 탐색  
-     - 월드 좌표 변환 → 다항식 피팅 → 법선 벡터 경로 생성  
-     - Pure Pursuit 룩어헤드 포인트 & 조향각 계산  
-     - 원본·윈도우·피팅 플롯을 실시간 갱신  
-  3. 종료 시 `cap.release()`, `cv2.destroyAllWindows()` 호출  
-
-
-
+- **스크립트 흐름**  
+  1. **모듈 임포트 & 초기 설정**  
+     - OpenCV 비디오 캡처, Matplotlib 플롯 생성  
+     - `sliding_window.SlidingWindow`, `pure_pursuit.PurePursuit` 인스턴스화  
+  2. **프레임 루프**  
+     ```python
+     while cap.isOpened():
+         ret, frame = cap.read()
+         if not ret: break
+         binary = Bev_Gray_Blurred_Binary_transform(frame)
+         # 슬라이딩 윈도우 탐색
+         result, R_pts, L_pts, p_pts, nv_pts = sw_detector.process(
+             binary, ax, L_scatter, R_scatter, p_scatter, nv_p_scatter
+         )
+         # 경로·법선 다항식 피팅
+         if p_pts:    p_Polyft_Plotting(p_pts, p_scatter, ax)
+         if nv_pts:
+             degree = 1 if not R_pts else 3
+             nv_poly = nv_p_Polyft_Plotting(nv_pts, nv_p_scatter, ax, degree)
+         # Pure Pursuit 룩어헤드 & 조향각 계산
+         if nv_poly:
+             lookahead_pts = lookahead_point_cal(0, 0, Ld, nv_poly, nv_pts)
+             # 시각화 및 angle 계산
+         # Matplotlib → OpenCV 이미지 변환 후 화면에 출력
+     ```
+  3. **종료 처리**  
+     - `cap.release()`, `cv2.destroyAllWindows()` 호출  
 
 ---
