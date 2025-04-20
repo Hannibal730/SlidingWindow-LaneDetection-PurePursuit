@@ -5,22 +5,22 @@
 
 
 ### 1. 직선구간
-   ![Image](https://github.com/user-attachments/assets/1dee7d03-a1b1-4b49-aaca-eaaea939b834)
+![Image](https://github.com/user-attachments/assets/1dee7d03-a1b1-4b49-aaca-eaaea939b834)
 
 <br>
 
 ### 2. 좌회전
-    ![Image](https://github.com/user-attachments/assets/8636e5e5-9f0b-404a-b9ab-b0bb32dffca7)
+![Image](https://github.com/user-attachments/assets/8636e5e5-9f0b-404a-b9ab-b0bb32dffca7)
 
 <br>
 
 ### 3. 횡단보도
-    ![Image](https://github.com/user-attachments/assets/c159765d-024a-43fe-8005-710e6d107a34)
+![Image](https://github.com/user-attachments/assets/c159765d-024a-43fe-8005-710e6d107a34)
 
 <br>
 
 ### 4. 우회전
-    ![Image](https://github.com/user-attachments/assets/4c0ecdfd-d7ca-42ff-97c1-b83d36f300b8)
+![Image](https://github.com/user-attachments/assets/4c0ecdfd-d7ca-42ff-97c1-b83d36f300b8)
 
 ---
 
