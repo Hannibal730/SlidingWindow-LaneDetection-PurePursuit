@@ -2,13 +2,16 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from scipy.optimize import fsolve
+
 import warnings
 from numpy import RankWarning
 import math
 from plot_setup import create_lane_plot
 from preprocessing import Bev_Gray_Blurred_Binary_transform, histogram_argmax
+from coordinate_transform import pixel_to_meter
 from normal_vector_cal import L_normal_vector_cal, R_normal_vector_cal
+from pure_pursuit import lookahead_point_cal, lookahead_point_vec_cal, angle_between_vectors, delta_raidians_cal
+
 
 cap = cv2.VideoCapture("test_video_640x480.mp4")
 
@@ -44,10 +47,6 @@ S_y = actuaL_lane_length / lane_pixeL_length  # Y축 변환 비율
 
 
 
-def pixeL_to_meter(x_pixel, y_pixel, origin_x, origin_y, S_x, S_y):
-    x_meter = (x_pixel - origin_x) * S_x
-    y_meter = (origin_y - y_pixel) * S_y
-    return y_meter, -x_meter # return x_meter, y_meter  결과를 x축대칭, y축대칭, y=x축 대칭을 한 상황
 
 
 #########################################################################################
@@ -98,9 +97,6 @@ def R_Polyft_Plotting(R_points_meter_list, R_scatter, ax):
     # x 범위에 대한 피팅된 y 값 계산
     R_x_fit = np.linspace(min(R_x), max(R_x), 300)
     R_y_fit = R_poly_func(R_x_fit)
-    
-
-    
     
     
     # 이전 피팅 선 제거
@@ -180,91 +176,11 @@ def nv_p_Polyft_Plotting(nv_p_list, nv_p_scatter, ax, N):
 
 
 
-
-
-# #########################################################################################
-# # 중심과 반지름이 (a,b), r인 원과 차선경로 피팅함수와의 교점(룩어헤드 포인트)을 계산하는 함수
-# #########################################################################################
+#########################################################################################
+# 퓨어퍼슛 관련 파라미터
+#########################################################################################
 Ld = 2.5
-def lookahead_point_cal (a, b, r, nv_p_poly_func, nv_p_list):
-    def circle_equation (x, r):
-        return (x-a)**2 + (nv_p_poly_func(x)-b)**2 -r**2
-    
-    # 초기화
-    if len (nv_p_list) == 0: return []
-    x_nv_p_list = list(zip(*nv_p_list))[0]
-    lookahead_point_list = []
-    
-    
-    x_sol = fsolve(circle_equation, x_nv_p_list, args=(Ld,)) # 반지름 길이가 Ld일 때, 교점의 x좌표인 x_sol 찾기
-
-    
-    if len(x_sol) > 0 and not np.isnan(x_sol).any(): # x_sol이 존재하면
-        print("Lookahead Point can be calculated")
-        x_sol = [x for x in x_sol if x > 0]
-        y_sol = nv_p_poly_func(x_sol)
-        lookahead_point_list.append((x_sol, y_sol))
-        
-
-    else: # x_sol이 존재 안 하면
-    # 반지름 길이 r  반복문
-        print("Lookahead Point can not be calculated")
-        max_r = 10.0   # 최대 탐색 반지름
-        for i in np.arange(r, max_r, 1.0):  # r → max_r까지 1씩 증가
-            x_sol = fsolve(circle_equation, x_nv_p_list, args=(i,))
-            if len(x_sol) > 0 and not np.isnan(x_sol).any():
-                y_sol = nv_p_poly_func(x_sol)
-                lookahead_point_list.append((x_sol, y_sol))
-                break
-
-    return lookahead_point_list
-
-
-
-
-
-
-
-#########################################################################################
-# 차량의 정면방향과 룩어헤드 포인트 방향 사이의 사이각 계산
-#########################################################################################
-
 car_direcrtion_vec = [1, 0]
-def lookahead_point_vec_cal (a, b): # 룩어헤드 포인트 좌표 (a, b)
-    # lookahead_point_vec = [a-1.341, b-0]
-    lookahead_point_vec = [a[0]-1.341, b[0]-0]
-    return lookahead_point_vec
-
-
-def angle_between_vectors(vec1, vec2): # 입력할 순서는 차량 직선방향, 룩어헤드 포인트
-    dot_product = np.dot(vec1, vec2) # 내적
-    magnitude1 = np.linalg.norm(vec1) # 두 벡터의 크기 계산
-    magnitude2 = np.linalg.norm(vec2)
-    
-    cos_theta = dot_product / (magnitude1 * magnitude2) # 두 벡터 사이의 코사인 값 계산
-    angle_radians = np.arccos(np.clip(cos_theta, -1.0, 1.0)) # 코사인 값을 이용해 각도 계산 (라디안 단위) # np.clip이 코사인 값을 -1 ~ 1 범위로 제한
-    
-    if vec2[1] <0: # 룩어헤드 포인트 벡터의 y좌표가 차량직선방향의 y좌표인 0보다 작다면 우회전 필요상황
-        angle_radians *= -1 # 우회전 필요상황에선 조향각의 라디안 값이 음수로 나오게
-    
-    return angle_radians
-
-
-#########################################################################################
-# 조향각 계산
-#########################################################################################
-L = 0.55 # 휠 베이스
-def delta_raidians_cal (alpha_radians):
-    delta_radians = math.atan (2*L*math.sin(alpha_radians) / Ld)
-    return delta_radians
-
-
-
-
-
-
-
-
 
 
 
@@ -309,7 +225,7 @@ while True:
             R_win_x_current = R_win_x_mean if abs(R_win_x_mean - R_win_x_prev) < R_consistency_threshold else R_win_x_prev # 새로 구한 x좌표와 기존 x 좌표 사이의 거리가 쓰레숄드를 넘지 않으면 새로 구한 x좌표를 R_win_x_current로 갱신. 넘으면 기존 x좌표 유지
             cv2.rectangle(result_frame, (R_win_x_low, R_win_y_low), (R_win_x_high, R_win_y_high), (0, 0, 255), 2) # 빨간색 윈도우랑 데이터 포인트
             cv2.circle(result_frame, (R_win_x_mean, R_win_y_mean), 5, (0, 0, 255), -1)
-            R_x_mean_meter, R_y_mean_meter=pixeL_to_meter (R_win_x_mean, R_win_y_mean, origin_x, origin_y, S_x, S_y) # 좌표계 변환하고 저장
+            R_x_mean_meter, R_y_mean_meter=pixel_to_meter (R_win_x_mean, R_win_y_mean, origin_x, origin_y, S_x, S_y) # 좌표계 변환하고 저장
             R_points_meter_list.append((R_x_mean_meter+1.341, R_y_mean_meter))
             
             p_list.append((R_x_mean_meter+1.341, R_y_mean_meter+0.425)) # 오른쪽 차선기반 초록 데이터 포인트
@@ -341,7 +257,7 @@ while True:
                 L_win_x_current = L_win_x_mean if abs(L_win_x_mean - L_win_x_prev) < L_consistency_threshold else L_win_x_prev
                 cv2.rectangle(result_frame, (L_win_x_low, L_win_y_low), (L_win_x_high, L_win_y_high), (255, 0, 0), 2) # 파란색 윈도우랑 데이터 포인트
                 cv2.circle(result_frame, (L_win_x_mean, L_win_y_mean), 7, (255, 0, 0), -1)
-                L_x_mean_meter, L_y_mean_meter=pixeL_to_meter (L_win_x_mean, L_win_y_mean, origin_x, origin_y, S_x, S_y) # 좌표계 변환하고 저장
+                L_x_mean_meter, L_y_mean_meter=pixel_to_meter (L_win_x_mean, L_win_y_mean, origin_x, origin_y, S_x, S_y) # 좌표계 변환하고 저장
                 L_points_meter_list.append((L_x_mean_meter+1.341, L_y_mean_meter))   
             else:
                 little_L_indices = np.column_stack(np.where(preprocessed_frame[L_win_y_low:L_win_y_high, :L_win_x_mean] > 0))
@@ -352,7 +268,7 @@ while True:
                     cv2.rectangle(result_frame, (L_win_x_low, L_win_y_low), (L_win_x_high, L_win_y_high), (0, 255, 0), 2)
                     cv2.circle(result_frame, (little_L_win_x_mean, little_L_win_y_mean), 7, (0, 255, 0), -1)
                     # 좌표계 변환하고 저장
-                    L_little_x_mean_meter, L_little_y_mean_meter=pixeL_to_meter (little_L_win_x_mean, little_L_win_y_mean, origin_x, origin_y, S_x, S_y)
+                    L_little_x_mean_meter, L_little_y_mean_meter=pixel_to_meter (little_L_win_x_mean, little_L_win_y_mean, origin_x, origin_y, S_x, S_y)
                     L_points_meter_list.append((L_little_x_mean_meter+1.341, L_little_y_mean_meter))
                     
 
