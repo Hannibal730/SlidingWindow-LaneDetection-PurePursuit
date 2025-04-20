@@ -308,8 +308,7 @@ python main.py
 ## 최종 결과
 
 
-![Watch the video](https://github.com/user-attachments/assets/ee4a903d-03c3-4759-ab37-fb965406ac0c)
-(https://youtu.be/wkIwpAuREkg)
+[![Watch the video](https://github.com/user-attachments/assets/ee4a903d-03c3-4759-ab37-fb965406ac0c)](https://youtu.be/wkIwpAuREkg)
 
 
 ---
