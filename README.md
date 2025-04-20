@@ -92,8 +92,9 @@ python main.py
 
 
 
-
 ---
+
+<br>
 
 ## 모듈 설명
 
@@ -304,6 +305,8 @@ python main.py
      - `cap.release()`, `cv2.destroyAllWindows()` 호출  
 
 ---
+
+<br><br>
 
 ## 최종 결과
 
