@@ -190,7 +190,7 @@ python main.py
   - 슬라이딩 윈도우 반복으로 차선 픽셀 수집 → 픽셀→미터 좌표 변환 → 좌/우 차선의 포인트 리스트 (p_pts) 생성
   - 슬라이딩 윈도우로 생성한 차선 포인트가 검정 픽셀일 경우, 그 픽셀을 기준으로 더 외곽에서 흰색 픽셀 중 선택
 
-    | 검정픽셀 선택     |  흰섹 픽셀 선택   |
+    | 검정픽셀 선택     |  흰색 픽셀 선택   |
     |:--------:|:--------:|
     | ![Image](https://github.com/user-attachments/assets/b682be67-b525-4ced-b765-cbc6237eac26)     | ![Image](https://github.com/user-attachments/assets/825be0c3-d01c-4f89-816e-0b945a4ffa68)   | 
 
