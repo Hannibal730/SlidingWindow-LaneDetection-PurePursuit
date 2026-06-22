@@ -98,12 +98,12 @@ ax.legend(legend_handles, legend_labels, loc='upper left', bbox_to_anchor=(1.38,
 origin_x, origin_y = (569-28) / 2, 480  # 미터 좌표계에서 원점이 될 픽셀 좌표.
 
 actuaL_lane_width = 0.85  # 차선 간격의 실제 길이 (단위: m)
-lane_pixeL_width = 569-28    # 차선 간격의 픽셀 길이
-S_x = actuaL_lane_width / lane_pixeL_width  # X축 변환 비율
+lane_pixel_width = 569-28    # 차선 간격의 픽셀 길이
+S_x = actuaL_lane_width / lane_pixel_width  # X축 변환 비율
 
 actuaL_lane_length = 0.5  # 차선 길이의 실제 길이 (단위: m)
-lane_pixeL_length = 247-123    # 차선 길이의 픽셀 길이
-S_y = actuaL_lane_length / lane_pixeL_length  # Y축 변환 비율
+lane_pixel_length = 247-123    # 차선 길이의 픽셀 길이
+S_y = actuaL_lane_length / lane_pixel_length  # Y축 변환 비율
 
 
 
