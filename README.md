@@ -310,7 +310,7 @@ python main.py
 
 <br>
 
-## 최종 결과
+## 최종 결과 (2026_final)
 
 
 [![Watch the video](https://github.com/user-attachments/assets/bf700516-b850-4eee-86ba-9156a48fd7a9)](https://youtu.be/CJocmGOpRaM)
