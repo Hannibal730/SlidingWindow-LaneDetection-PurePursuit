@@ -313,12 +313,6 @@ python main.py
 ## 최종 결과
 
 
-[![Watch the video](https://github.com/user-attachments/assets/ee4a903d-03c3-4759-ab37-fb965406ac0c)](https://youtu.be/wkIwpAuREkg)
-
-
----
-
-## 멘토
-건국대학교 로봇동아리 돌밭 자율주행팀 임현우
+[![Watch the video](https://github.com/user-attachments/assets/bf700516-b850-4eee-86ba-9156a48fd7a9)](https://youtu.be/CJocmGOpRaM)
 
 
